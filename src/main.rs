@@ -43,13 +43,13 @@ fn test() {
     let config: Config = toml::from_str(include_str!("config.toml")).unwrap();
     let home_path: String = "/home/".to_string() + &config.user;
     let root_password = String::new();
-    let github_ssh_key: &str = "";
+    let github_ssh_password: &str = "";
 }
 
 fn install_software() {
     let config: Config = toml::from_str(include_str!("config.toml")).unwrap();
     let home_path: String = "/home/".to_string() + &config.user;
-    let github_ssh_key: String = read_password("github ssh key");
+    let github_ssh_password: String = read_password("github ssh key");
     let root_password: String = read_password("root");
     let mut git = Command::new("git");
 
@@ -141,7 +141,7 @@ fn install_software() {
             "clone",
             config
                 .dotfiles_repo
-                .replace("{password}", github_ssh_key.as_str())
+                .replace("{password}", github_ssh_password.as_str())
                 .as_str(),
         ])
         .spawn()
