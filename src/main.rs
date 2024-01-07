@@ -21,30 +21,18 @@ struct Arguments {
 
 #[derive(Debug, Subcommand)]
 enum Action {
-    TEST,
     INSTALL,
     UNINSTALL,
 }
 
 fn main() {
     match Arguments::parse().action {
-        Action::TEST => {
-            println!("installing...");
-            test();
-        }
         Action::INSTALL => {
             println!("installing...");
             install_software()
         }
         Action::UNINSTALL => println!("uninstalling..."),
     }
-}
-
-fn test() {
-    let config: Config = toml::from_str(include_str!("config.toml")).unwrap();
-    let home_path: String = "/home/".to_string() + &config.user;
-    let root_password = String::new();
-    let github_ssh_password: &str = "";
 }
 
 fn install_software() {
