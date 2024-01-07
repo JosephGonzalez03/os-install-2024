@@ -54,13 +54,13 @@ fn install_software() {
     let root_password: String = read_password("root");
     let mut git = Command::new("git");
 
-    //install font
     let font_name = config
         .font_url
         .split("/")
         .last()
         .unwrap()
         .replace(".zip", "");
+    println!("Installing font: {}.", font_name);
     Command::new("touch")
         .args(["-p", &(home_path.clone() + "/.local/share/fonts")])
         .spawn()
@@ -84,7 +84,7 @@ fn install_software() {
         .spawn()
         .unwrap();
 
-    //install arch packages
+    println!("Installing Arch packages.");
     Command::new("pacman")
         .args(["-S", config.arch_packages.join(" ").as_str()])
         .spawn()
@@ -96,7 +96,7 @@ fn install_software() {
         .spawn()
         .unwrap();
 
-    //create eww binary
+    println!("Building eww binary.");
     git.current_dir(home_path.clone() + "/apps")
         .args(["clone", config.eww_repo.as_str()])
         .spawn()
@@ -116,6 +116,7 @@ fn install_software() {
         .args(["+x", "eww"])
         .spawn()
         .unwrap();
+    println!("Installing eww binary.");
     Command::new("sudo ")
         .current_dir(home_path.clone() + "/apps/eww/target/release")
         .stdin(Stdio::from(
@@ -131,7 +132,7 @@ fn install_software() {
         .spawn()
         .unwrap();
 
-    //create swww & swww daemon binaries
+    println!("Building swww and swww-daemon binaries.");
     git.current_dir(home_path.clone() + "/apps")
         .args(["clone", config.swww_repo.as_str()])
         .spawn()
@@ -151,6 +152,7 @@ fn install_software() {
         .args(["+x", "swww swww-daemon"])
         .spawn()
         .unwrap();
+    println!("Installing swww and swww-daemon binaries.");
     Command::new("sudo")
         .stdin(Stdio::from(
             Command::new("echo")
@@ -166,7 +168,7 @@ fn install_software() {
         .spawn()
         .unwrap();
 
-    //apply dotfiles
+    println!("Applying personal settings.");
     git.current_dir(home_path.clone() + "/.config")
         .args([
             "clone",
