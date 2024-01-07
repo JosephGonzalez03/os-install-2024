@@ -1,0 +1,22 @@
+user = "joe"
+
+arch_packages = [
+  "alacrittyr",
+  "deja-dup",
+  "discord",
+  "gtk-layer-shell",
+  "helix",
+  "libreoffice",
+  "nushell",
+  "pamixer",
+  "pass",
+  "pulsemixer",
+  "socat",
+  "wl-clipboard",
+  "zellij",
+  "zenith"
+]
+
+eww_repo = "git@github.com:elkowar/eww.git"
+swww_repo = "git@github.com:Horus645/swww.git"
+dotfiles_repo = "git@github.com:JosephGonzalez03:{password}/.dotfiles.git"
