@@ -20,3 +20,4 @@ arch_packages = [
 eww_repo = "git@github.com:elkowar/eww.git"
 swww_repo = "git@github.com:Horus645/swww.git"
 dotfiles_repo = "git@github.com:JosephGonzalez03:{password}/.dotfiles.git"
+font_url = "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/RobotoMono.zip"

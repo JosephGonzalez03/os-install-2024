@@ -10,6 +10,7 @@ struct Config {
     eww_repo: String,
     swww_repo: String,
     dotfiles_repo: String,
+    font_url: String,
 }
 
 #[derive(Debug, Parser)]
@@ -52,6 +53,36 @@ fn install_software() {
     let github_ssh_password: String = read_password("github ssh key");
     let root_password: String = read_password("root");
     let mut git = Command::new("git");
+
+    //install font
+    let font_name = config
+        .font_url
+        .split("/")
+        .last()
+        .unwrap()
+        .replace(".zip", "");
+    Command::new("touch")
+        .args(["-p", &(home_path.clone() + "/.local/share/fonts")])
+        .spawn()
+        .unwrap();
+    Command::new("wget")
+        .current_dir(home_path.clone() + "/.local/share/fonts")
+        .arg(config.font_url.as_str())
+        .spawn()
+        .unwrap();
+    Command::new("unzip")
+        .current_dir(home_path.clone() + "/.local/share/fonts")
+        .args(["-d", font_name.as_str()])
+        .spawn()
+        .unwrap();
+    Command::new("rm")
+        .current_dir(home_path.clone() + "/.local/share/fonts" + font_name.as_str())
+        .args([
+            "LICENSE README.md",
+            &(String::from("../") + font_name.as_str() + ".zip"),
+        ])
+        .spawn()
+        .unwrap();
 
     //install arch packages
     Command::new("pacman")
