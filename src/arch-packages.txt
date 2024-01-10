@@ -1,12 +1,10 @@
 alacritty
 deja-dup
 discord
-firefox
 helix
 libreoffice
 nushell
 pamixer
-pass
 pulsemixer
 socat
 wl-clipboard
