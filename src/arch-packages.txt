@@ -1,12 +1,14 @@
 alacritty
 deja-dup
 discord
+gtk-layer-shell
 helix
 libreoffice
 nushell
 pamixer
 pulsemixer
 socat
+stow
 wl-clipboard
 zellij
 zenith
