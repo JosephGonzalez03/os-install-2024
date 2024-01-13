@@ -32,6 +32,7 @@ enum InstallOption {
     ArchPackages,
     Dotfiles,
     Fonts,
+    RustApps,
 }
 
 fn main() {
@@ -47,6 +48,9 @@ fn main() {
                 InstallOption::ArchPackages => install_arch_packages(config.arch_packages),
                 InstallOption::Dotfiles => install_dotfiles(config.dotfiles_repo, home_path),
                 InstallOption::Fonts => install_fonts(config.font_url, home_path),
+                InstallOption::RustApps => {
+                    install_rust_apps(config.eww_repo, config.swww_repo, home_path)
+                }
             }
         }
         Action::Uninstall => println!("uninstalling..."),
@@ -160,56 +164,75 @@ fn install_dotfiles(dotfiles_repo: String, home_path: String) {
         .unwrap();
 }
 
-fn install_software(config: Config, home_path: String) {
+fn install_rust_apps(eww_repo: String, swww_repo: String, home_path: String) {
     let root_password: String = read_password("root");
     let mut git = Command::new("git");
 
-    //create apps directory
+    println!("Creating apps directory. eww and swww will be installed here.");
     Command::new("mkdir")
         .args(["-p", &(home_path.clone() + "/apps")])
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 
-    //println!("Building eww binary.");
-    //git.current_dir(home_path.clone() + "/apps")
-    //    .args(["clone", config.eww_repo.as_str()])
-    //    .spawn()
-    //    .unwrap();
-    //Command::new("cargo")
-    //    .current_dir(home_path.clone() + "/apps/eww")
-    //    .args([
-    //        "build",
-    //        "--release",
-    //        "--no-default-features",
-    //        "--features=wayland",
-    //    ])
-    //    .spawn()
-    //    .unwrap();
-    //Command::new("chmod")
-    //    .current_dir(home_path.clone() + "/apps/eww/target/release")
-    //    .args(["+x", "eww"])
-    //    .spawn()
-    //    .unwrap();
-    //println!("Installing eww binary.");
-    //Command::new("sudo ")
-    //    .current_dir(home_path.clone() + "/apps/eww/target/release")
-    //    .stdin(Stdio::from(
-    //        Command::new("echo")
-    //            .arg(root_password.clone())
-    //            .stdout(Stdio::piped())
-    //            .spawn()
-    //            .unwrap()
-    //            .stdout
-    //            .unwrap(),
-    //    ))
-    //    .args(["-S", "mv", "eww", "/usr/local/bin/"])
-    //    .spawn()
-    //    .unwrap();
+    println!("Building eww binary.");
+    git.current_dir(home_path.clone() + "/apps")
+        .args(["clone", eww_repo.as_str()])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Command::new("rustup")
+        .current_dir(home_path.clone() + "/apps/eww")
+        .args(["override", "set", "nightly"])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Command::new("cargo")
+        .current_dir(home_path.clone() + "/apps/eww")
+        .args([
+            "build",
+            "--release",
+            "--no-default-features",
+            "--features=wayland",
+        ])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Command::new("chmod")
+        .current_dir(home_path.clone() + "/apps/eww/target/release")
+        .args(["+x", "eww"])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    println!("Installing eww binary.");
+    Command::new("sudo ")
+        .current_dir(home_path.clone() + "/apps/eww/target/release")
+        .stdin(Stdio::from(
+            Command::new("echo")
+                .arg(root_password.clone())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap()
+                .stdout
+                .unwrap(),
+        ))
+        .args(["-S", "mv", "eww", "/usr/local/bin/"])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
 
     println!("Building swww and swww-daemon binaries.");
     git.current_dir(home_path.clone() + "/apps")
-        .args(["clone", config.swww_repo.as_str()])
+        .args(["clone", swww_repo.as_str()])
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
     Command::new("cargo")
         .current_dir(home_path.clone() + "/apps/swww")
@@ -220,11 +243,15 @@ fn install_software(config: Config, home_path: String) {
             "--features=wayland",
         ])
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
     Command::new("chmod")
         .current_dir(home_path.clone() + "/apps/swww/target/release")
-        .args(["+x", "swww swww-daemon"])
+        .args(["+x", "swww", "swww-daemon"])
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
     println!("Installing swww and swww-daemon binaries.");
     Command::new("sudo")
@@ -237,9 +264,11 @@ fn install_software(config: Config, home_path: String) {
                 .stdout
                 .unwrap(),
         ))
-        .args(["-S", "mv", "swww swww-daemon", "/usr/local/bin/"])
         .current_dir(home_path.clone() + "/apps/swww/target/release")
+        .args(["-S", "mv", "swww", "swww-daemon", "/usr/local/bin/"])
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 }
 
