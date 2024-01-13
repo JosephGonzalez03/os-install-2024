@@ -1,7 +1,7 @@
 user = "joe"
 
 arch_packages = [
-  "alacrittyr",
+  "alacritty",
   "deja-dup",
   "discord",
   "gtk-layer-shell",

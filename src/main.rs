@@ -28,6 +28,7 @@ enum Action {
 
 #[derive(Debug, Subcommand)]
 enum InstallOption {
+    Test,
     ArchPackages,
     Dotfiles,
     Fonts,
@@ -37,59 +38,26 @@ fn main() {
     let config: Config = toml::from_str(include_str!("config.toml")).unwrap();
     let home_path: String = "/home/".to_string() + &config.user;
 
+    //Add rustup component add rust-analyzer command
     match Arguments::parse().action {
         Action::Install(install_option) => {
             println!("installing...");
             match install_option {
-                InstallOption::ArchPackages => println!("packages"),
+                InstallOption::Test => test_fn(),
+                InstallOption::ArchPackages => install_arch_packages(config.arch_packages),
                 InstallOption::Dotfiles => println!("dotfiles"),
-                InstallOption::Fonts => println!("fonts"),
+                InstallOption::Fonts => install_fonts(config.font_url, home_path),
             }
         }
         Action::Uninstall => println!("uninstalling..."),
     }
 }
 
-fn install_fonts(config: Config, home_path: String) {
-    let font_name = config
-        .font_url
-        .split("/")
-        .last()
-        .unwrap()
-        .replace(".zip", "");
-
-    println!("Installing font: {}.", font_name);
-    println!("{}", home_path.clone() + "/.local/share/fonts");
-    Command::new("mkdir")
-        .args(["-p", &(home_path.clone() + "/.local/share/fonts")])
-        .spawn()
-        .unwrap();
-    Command::new("wget")
-        .current_dir(home_path.clone() + "/.local/share/fonts")
-        .arg(config.font_url.as_str())
-        .spawn()
-        .unwrap();
-    Command::new("unzip")
-        .current_dir(home_path.clone() + "/.local/share/fonts")
-        // add font zip to arg list
-        .args(["-d", font_name.as_str()])
-        .spawn()
-        .unwrap();
-    Command::new("rm")
-        .current_dir(home_path.clone() + "/.local/share/fonts" + font_name.as_str())
-        .args([
-            "LICENSE README.md",
-            &(String::from("../") + font_name.as_str() + ".zip"),
-        ])
-        .spawn()
-        .unwrap();
-}
-
-fn install_arch_packages(config: Config, home_path: String) {
+fn test_fn() {
     let root_password: String = read_password("root");
 
     println!("Installing Arch packages.");
-    Command::new("sudo ")
+    Command::new("sudo")
         .stdin(Stdio::from(
             Command::new("echo")
                 .arg(root_password.clone())
@@ -99,8 +67,74 @@ fn install_arch_packages(config: Config, home_path: String) {
                 .stdout
                 .unwrap(),
         ))
-        .args(["pacman -S", config.arch_packages.join(" ").as_str()])
+        .args(["-S", "ls", "-l"])
         .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+}
+
+fn install_fonts(font_url: String, home_path: String) {
+    let font_name = font_url.split("/").last().unwrap().replace(".zip", "");
+
+    println!("Installing font: {}.", font_name);
+    Command::new("mkdir")
+        .args(["-p", &(home_path.clone() + "/.local/share/fonts")])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Command::new("wget")
+        .current_dir(home_path.clone() + "/.local/share/fonts")
+        .arg(font_url.as_str())
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Command::new("unzip")
+        .current_dir(home_path.clone() + "/.local/share/fonts")
+        .args([
+            font_name.clone() + ".zip",
+            String::from("-d"),
+            font_name.clone(),
+        ])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Command::new("rm")
+        .current_dir(home_path.clone() + "/.local/share/fonts/" + font_name.as_str())
+        .args([
+            "LICENSE.txt",
+            "README.md",
+            &(String::from("../") + font_name.as_str() + ".zip"),
+        ])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+}
+
+fn install_arch_packages(mut packages: Vec<String>) {
+    let root_password: String = read_password("root");
+    let mut arguments = vec!["-S".to_string(), "pacman".to_string(), "-S".to_string()];
+    arguments.append(&mut packages);
+
+    println!("Installing Arch packages.");
+    Command::new("sudo")
+        .stdin(Stdio::from(
+            Command::new("echo")
+                .arg(root_password.clone())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap()
+                .stdout
+                .unwrap(),
+        ))
+        .args(arguments)
+        .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 }
 
