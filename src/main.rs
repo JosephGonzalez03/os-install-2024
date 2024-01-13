@@ -115,10 +115,8 @@ fn install_fonts(font_url: String, home_path: String) {
         .unwrap();
 }
 
-fn install_arch_packages(mut packages: Vec<String>) {
+fn install_arch_packages(packages: Vec<String>) {
     let root_password: String = read_password("root");
-    let mut arguments = vec!["-S".to_string(), "pacman".to_string(), "-S".to_string()];
-    arguments.append(&mut packages);
 
     println!("Installing Arch packages.");
     Command::new("sudo")
@@ -131,7 +129,8 @@ fn install_arch_packages(mut packages: Vec<String>) {
                 .stdout
                 .unwrap(),
         ))
-        .args(arguments)
+        .args(["-S", "pacman", "-S"])
+        .args(packages)
         .spawn()
         .unwrap()
         .wait()
