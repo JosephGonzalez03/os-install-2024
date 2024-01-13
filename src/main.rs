@@ -91,32 +91,71 @@ fn install_fonts(font_url: String, home_path: String) {
 }
 
 fn install_arch_packages(packages: Vec<String>) {
-    let root_password: String = read_password("root");
+    let installed_packages: String = String::from_utf8(
+        Command::new("ls")
+            .current_dir("/usr/bin")
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    let installed_packages: Vec<&str> = installed_packages.split_terminator("\n").collect();
+    let not_installed_packages: Vec<String> = packages
+        .into_iter()
+        .filter(|package| !installed_packages.contains(&package.as_str()))
+        .collect();
+    match not_installed_packages.is_empty() {
+        true => {
+            println!("All packages are already installed. Skipping installtion step.");
+        }
+        false => {
+            let root_password: String = read_password("root");
 
-    println!("Installing Arch packages.");
-    Command::new("sudo")
-        .stdin(Stdio::from(
-            Command::new("echo")
-                .arg(root_password.clone())
-                .stdout(Stdio::piped())
+            println!("Installing Arch packages.");
+            Command::new("sudo")
+                .stdin(Stdio::from(
+                    Command::new("echo")
+                        .arg(root_password.clone())
+                        .stdout(Stdio::piped())
+                        .spawn()
+                        .unwrap()
+                        .stdout
+                        .unwrap(),
+                ))
+                .args(["-S", "pacman", "-S"])
+                .args(not_installed_packages)
                 .spawn()
                 .unwrap()
-                .stdout
-                .unwrap(),
-        ))
-        .args(["-S", "pacman", "-S"])
-        .args(packages)
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
-    println!("Installing rust-analyzer for text editor's LSP.");
-    Command::new("rustup")
-        .args(["component", "add", "rust-analyzer"])
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
+                .wait()
+                .unwrap();
+        }
+    }
+    let installed_packages: String = String::from_utf8(
+        Command::new("ls")
+            .current_dir("~/.cargo/bin")
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    let is_rustup_installed: bool = installed_packages
+        .split_terminator("\n")
+        .collect::<Vec<&str>>()
+        .contains(&"rust-analyzer");
+    match is_rustup_installed {
+        true => {
+            println!("rust-analyzer is already installed. Skipping installation step");
+        }
+        false => {
+            println!("Installing rust-analyzer for text editor's LSP.");
+            Command::new("rustup")
+                .args(["component", "add", "rust-analyzer"])
+                .spawn()
+                .unwrap()
+                .wait()
+                .unwrap();
+        }
+    }
 }
 
 fn install_dotfiles(dotfiles_repo: String, home_path: String) {
