@@ -45,7 +45,7 @@ fn main() {
             match install_option {
                 InstallOption::Test => test_fn(),
                 InstallOption::ArchPackages => install_arch_packages(config.arch_packages),
-                InstallOption::Dotfiles => println!("dotfiles"),
+                InstallOption::Dotfiles => install_dotfiles(config.dotfiles_repo, home_path),
                 InstallOption::Fonts => install_fonts(config.font_url, home_path),
             }
         }
@@ -54,24 +54,9 @@ fn main() {
 }
 
 fn test_fn() {
-    let root_password: String = read_password("root");
-
-    println!("Installing Arch packages.");
-    Command::new("sudo")
-        .stdin(Stdio::from(
-            Command::new("echo")
-                .arg(root_password.clone())
-                .stdout(Stdio::piped())
-                .spawn()
-                .unwrap()
-                .stdout
-                .unwrap(),
-        ))
-        .args(["-S", "ls", "-l"])
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
+    let cmd = Command::new("ls").output().unwrap().stdout;
+    println!("printing...{:?} end of print", cmd);
+    Command::new("ls").spawn().unwrap();
 }
 
 fn install_fonts(font_url: String, home_path: String) {
@@ -137,7 +122,7 @@ fn install_arch_packages(packages: Vec<String>) {
         .unwrap();
 }
 
-fn install_dotfiles(config: Config, home_path: String) {
+fn install_dotfiles(dotfiles_repo: String, home_path: String) {
     let github_ssh_password: String = read_password("github ssh key");
     println!("Applying personal settings.");
 
@@ -145,33 +130,34 @@ fn install_dotfiles(config: Config, home_path: String) {
         .current_dir(home_path.clone() + "/.config")
         .args([
             "clone",
-            config
-                .dotfiles_repo
+            dotfiles_repo
                 .replace("{password}", github_ssh_password.as_str())
                 .as_str(),
         ])
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
-    let mut stow = Command::new("stow");
-    String::from_utf8(
+    let dotfiles_contents: String = String::from_utf8(
         Command::new("ls")
             .current_dir(home_path.clone() + "/.config/.dotfiles")
             .output()
             .unwrap()
             .stdout,
     )
-    .unwrap()
-    .split_terminator("\n")
-    .collect::<Vec<&str>>()
-    .into_iter()
-    .filter(|directory_item| !directory_item.contains(".md"))
-    .inspect(|directory| println!("Creating symlink for {}.", directory))
-    .for_each(|directory| {
-        stow.current_dir(home_path.clone() + "/.config/.dotfiles")
-            .arg(directory)
-            .spawn()
-            .unwrap();
-    })
+    .unwrap();
+    let dotfiles_directories: Vec<&str> = dotfiles_contents
+        .split_terminator("\n")
+        .filter(|directory_item| !directory_item.contains(".md"))
+        .collect();
+
+    Command::new("stow")
+        .current_dir(home_path.clone() + "/.config/.dotfiles")
+        .args(dotfiles_directories)
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
 }
 
 fn install_software(config: Config, home_path: String) {
