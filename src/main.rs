@@ -124,6 +124,13 @@ fn install_arch_packages(packages: Vec<String>) {
         .unwrap()
         .wait()
         .unwrap();
+    println!("Installing rust-analyzer for text editor's LSP.");
+    Command::new("rustup")
+        .args(["component", "add", "rust-analyzer"])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
 }
 
 fn install_dotfiles(dotfiles_repo: String, home_path: String) {
