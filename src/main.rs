@@ -14,12 +14,6 @@ struct Config {
 }
 
 #[derive(Debug, Parser)]
-struct Arguments {
-    #[clap(subcommand)]
-    action: Action,
-}
-
-#[derive(Debug, Subcommand)]
 enum Action {
     #[clap(subcommand)]
     Install(InstallOption),
@@ -28,7 +22,6 @@ enum Action {
 
 #[derive(Debug, Subcommand)]
 enum InstallOption {
-    Test,
     ArchPackages,
     Dotfiles,
     Fonts,
@@ -40,11 +33,10 @@ fn main() {
     let home_path: String = "/home/".to_string() + &config.user;
 
     //Add rustup component add rust-analyzer command
-    match Arguments::parse().action {
+    match Action::parse() {
         Action::Install(install_option) => {
             println!("installing...");
             match install_option {
-                InstallOption::Test => test_fn(),
                 InstallOption::ArchPackages => install_arch_packages(config.arch_packages),
                 InstallOption::Dotfiles => install_dotfiles(config.dotfiles_repo, home_path),
                 InstallOption::Fonts => install_fonts(config.font_url, home_path),
@@ -55,12 +47,6 @@ fn main() {
         }
         Action::Uninstall => println!("uninstalling..."),
     }
-}
-
-fn test_fn() {
-    let cmd = Command::new("ls").output().unwrap().stdout;
-    println!("printing...{:?} end of print", cmd);
-    Command::new("ls").spawn().unwrap();
 }
 
 fn install_fonts(font_url: String, home_path: String) {
