@@ -32,7 +32,6 @@ fn main() {
     let config: Config = toml::from_str(include_str!("config.toml")).unwrap();
     let home_path: String = "/home/".to_string() + &config.user;
 
-    //Add rustup component add rust-analyzer command
     match Action::parse() {
         Action::Install(install_option) => {
             println!("installing...");
