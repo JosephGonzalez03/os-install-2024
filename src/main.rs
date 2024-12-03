@@ -36,7 +36,10 @@ fn main() {
         Action::Install(install_option) => {
             println!("installing...");
             match install_option {
-                InstallOption::ArchPackages => install_arch_packages(config.arch_packages),
+                InstallOption::ArchPackages => {
+                    install_arch_packages(config.arch_packages);
+                    enable_docker(config.user);
+                }
                 InstallOption::Dotfiles => install_dotfiles(config.dotfiles_repo, home_path),
                 InstallOption::Fonts => install_fonts(config.font_url, home_path),
                 InstallOption::RustApps => {
