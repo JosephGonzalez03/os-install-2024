@@ -303,6 +303,42 @@ fn install_rust_apps(eww_repo: String, swww_repo: String, home_path: String) {
         .unwrap();
 }
 
+fn enable_docker(user: String) {
+    let root_password: String = read_password("root");
+
+    println!("Enabling docker.");
+    Command::new("sudo")
+        .stdin(Stdio::from(
+            Command::new("echo")
+                .arg(root_password.clone())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap()
+                .stdout
+                .unwrap(),
+        ))
+        .args(["systemctl", "enable", "docker.service"])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    Command::new("sudo")
+        .stdin(Stdio::from(
+            Command::new("echo")
+                .arg(root_password.clone())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap()
+                .stdout
+                .unwrap(),
+        ))
+        .args(["gpasswd", "-a", user.as_str(), "docker"])
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+}
+
 fn read_password(account: &str) -> String {
     println!("Enter password for {}: ", account);
     let mut input = String::new();

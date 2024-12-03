@@ -3,7 +3,6 @@ user = "joe"
 arch_packages = [
   "alacritty",
   "deja-dup",
-  "discord",
   "gtk-layer-shell",
   "helix",
   "libreoffice",
@@ -11,6 +10,7 @@ arch_packages = [
   "pamixer",
   "pass",
   "pulsemixer",
+  "signal",
   "socat",
   "wl-clipboard",
   "zellij",
